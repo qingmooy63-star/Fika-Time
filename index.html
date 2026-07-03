@@ -3,63 +3,364 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>고전 도서 요약 - 비밀의 화원</title>
+    <title>소형 도서관 (Tiny Library)</title>
     <style>
-        /* 스마트폰과 아이패드 모두 예쁘게 보이도록 디자인 설정 */
+        :root {
+            --bg-color: #121212;
+            --card-bg: #1e1e1e;
+            --accent-color: #dfb15b;
+            --text-color: #e0e0e0;
+            --text-muted: #a0a0a0;
+        }
+
         body {
-            font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif;
-            background-color: #f4f0e6;
-            color: #333;
+            font-family: 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
             margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+        }
+
+        .app-container {
+            max-width: 768px;
+            width: 100%;
+            min-height: 100vh;
+            background-color: #161616;
+            box-sizing: border-box;
             padding: 20px;
+            position: relative;
+            overflow-x: hidden;
+            margin: 0 auto;
+        }
+
+        header {
+            margin-bottom: 30px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid #2a2a2a;
+        }
+
+        header h1 {
+            color: var(--accent-color);
+            margin: 0;
+            font-size: 26px;
+            font-weight: bold;
+        }
+
+        header p {
+            color: var(--text-muted);
+            margin: 5px 0 0 0;
+            font-size: 13px;
+        }
+
+        .filter-tags {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 25px;
+        }
+
+        .tag {
+            background-color: #2a2a2a;
+            color: var(--text-color);
+            border: none;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 13px;
+            cursor: pointer;
+        }
+
+        .tag.active {
+            background-color: var(--accent-color);
+            color: #000;
+            font-weight: bold;
+        }
+
+        .section-title {
+            font-size: 16px;
+            color: var(--accent-color);
+            margin-bottom: 15px;
+            font-weight: bold;
+        }
+
+        .bookshelf {
+            display: flex;
+            gap: 15px;
+            overflow-x: auto;
+            padding-bottom: 20px;
+            margin-bottom: 30px;
+            scrollbar-width: none;
+        }
+
+        .bookshelf::-webkit-scrollbar {
+            display: none;
+        }
+
+        .book-spine {
+            flex: 0 0 75px;
+            height: 220px;
+            border-radius: 4px 8px 8px 4px;
+            padding: 15px 5px;
+            box-sizing: border-box;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            box-shadow: 5px 5px 15px rgba(0,0,0,0.5), inset 5px 0 5px rgba(255,255,255,0.1);
+            transition: transform 0.2s;
+            position: relative;
+            border-left: 4px solid rgba(255,255,255,0.2);
+        }
+
+        .book-spine:hover {
+            transform: translateY(-5px);
+        }
+
+        .book-title-vertical {
+            writing-mode: vertical-rl;
+            text-orientation: mixed;
+            color: #fff;
+            font-size: 14px;
+            font-weight: bold;
+            letter-spacing: 2px;
+            text-align: center;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.6);
+            pointer-events: none; /* 글자 클릭 시 오작동 방지 */
+        }
+
+        .detail-page {
+            position: fixed;
+            top: 0;
+            right: -100%;
+            max-width: 768px;
+            width: 100%;
+            height: 100vh;
+            background-color: #161616;
+            z-index: 100;
+            transition: right 0.3s ease;
+            box-sizing: border-box;
             display: flex;
             flex-direction: column;
+        }
+
+        .detail-page.active {
+            right: 0;
+        }
+
+        .detail-header {
+            padding: 20px;
+            background-color: var(--card-bg);
+            display: flex;
             align-items: center;
+            gap: 15px;
+            border-bottom: 1px solid #2a2a2a;
         }
-        .container {
-            max-width: 768px; /* 아이패드 해상도 기준 */
-            width: 100%;
-            background: #ffffff;
-            padding: 30px;
-            border-radius: 15px;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.05);
-            box-sizing: border-box;
-            margin-top: 20px;
-            margin-bottom: 20px;
+
+        .back-btn {
+            background: none;
+            border: none;
+            color: var(--accent-color);
+            font-size: 24px;
+            cursor: pointer;
         }
-        h1 { color: #2d4030; border-bottom: 2px solid #4c7354; padding-bottom: 10px; font-size: 24px; }
-        h2 { color: #4c7354; margin-top: 30px; font-size: 18px; }
-        .section { margin-bottom: 25px; line-height: 1.7; font-size: 15px; }
-        ul { padding-left: 20px; }
-        li { margin-bottom: 12px; font-size: 15px; line-height: 1.6; }
-        strong { color: #2d4030; }
+
+        .detail-header h2 {
+            margin: 0;
+            font-size: 20px;
+        }
+
+        .sub-tabs {
+            display: flex;
+            background-color: #222;
+            overflow-x: auto;
+            border-bottom: 1px solid #333;
+        }
+
+        .sub-tab-btn {
+            flex: 1;
+            min-width: 90px;
+            padding: 12px 5px;
+            background: none;
+            border: none;
+            color: var(--text-muted);
+            font-size: 13px;
+            cursor: pointer;
+            text-align: center;
+            white-space: nowrap;
+        }
+
+        .sub-tab-btn.active {
+            color: var(--accent-color);
+            border-bottom: 2px solid var(--accent-color);
+            font-weight: bold;
+        }
+
+        .detail-content {
+            padding: 25px;
+            overflow-y: auto;
+            flex: 1;
+            line-height: 1.8;
+            font-size: 15px;
+        }
+
+        .detail-content h3 {
+            color: var(--accent-color);
+            border-left: 4px solid var(--accent-color);
+            padding-left: 10px;
+            margin-top: 0;
+            font-size: 18px;
+        }
+
+        ol, ul { padding-left: 20px; }
+        li { margin-bottom: 12px; }
+        strong { color: #fff; }
     </style>
 </head>
 <body>
 
-<div class="container">
-    <h1>📖 고전 도서 요약: 비밀의 화원</h1>
+<div class="app-container">
+    <header>
+        <h1>소형 도서관</h1>
+        <p>TINY LIBRARY - 가치를 지닌 명작들을 깊게 마주하기</p>
+    </header>
+
+    <div class="filter-tags">
+        <button class="tag active" onclick="event.preventDefault();">전체</button>
+        <button class="tag" onclick="event.preventDefault();">세계 명작</button>
+        <button class="tag" onclick="event.preventDefault();">해설 특화</button>
+    </div>
+
+    <div class="section-title">세계 명작 컬렉션</div>
     
-    <div class="section">
-        <h2>1. 작가 및 시대적 배경</h2>
-        <p><strong>작가:</strong> 프랜시스 호지슨 버넷 (사후 70년 경과, 저작권 만료)</p>
-        <p><strong>배경:</strong> 1911년 발표된 작품으로, 당시 산업화로 지친 에드워드 시대 영국인들에게 '자연으로의 회귀와 치유'라는 메시지를 던졌습니다. 황량하지만 생명력이 숨 쉬는 요크셔 무어가 주요 무대입니다.</p>
-    </div>
-
-    <div class="section">
-        <h2>2. 핵심 내용 및 해설</h2>
-        <p>인도에서 부모를 잃고 마음이 닫힌 채 영국으로 온 고집쟁이 소녀 '메리'가 버려진 비밀의 화원을 발견하면서 시작됩니다. 닫힌 정원 문을 열고 가꾸는 행위는, 스스로의 마음을 열고 상처를 치유하는 성장의 과정을 비유합니다. 친구 콜린, 디콘과 함께 화원을 피워내며 몸과 마음이 모두 건강해지는 기적을 보여줍니다.</p>
-    </div>
-
-    <div class="section">
-        <h2>3. 독서모임 질문 리스트</h2>
-        <ul>
-            <li>🙋 <strong>Q1.</strong> 메리가 인도의 화려한 환경에서 요크셔의 황량한 환경으로 바뀐 것이 성격 변화에 어떤 영향을 주었을까요?</li>
-            <li>🙋 <strong>Q2.</strong> 작품 속에서 아이들이 가꾸는 '자연의 치유력(마법)'은 현대인들에게 어떤 의미로 다가올까요?</li>
-            <li>🙋 <strong>Q3.</strong> 어른들에게 정원을 비밀로 해야 했던 이유를 당시 시대상과 연결 지어 생각해 볼까요?</li>
-        </ul>
+    <div class="bookshelf">
+        <div class="book-spine" style="background-color: #2d4030;" onclick="openBook(event, 'secretGarden')">
+            <div class="book-title-vertical">비밀의 화원</div>
+        </div>
+        <div class="book-spine" style="background-color: #4a1525;" onclick="openBook(event, 'annaKarenina')">
+            <div class="book-title-vertical">안나 카레니나</div>
+        </div>
+        <div class="book-spine" style="background-color: #1e2a38;" onclick="openBook(event, 'insupportableLight')">
+            <div class="book-title-vertical">참을 수 없는 존재의 가벼움</div>
+        </div>
+        <div class="book-spine" style="background-color: #3e2723;" onclick="openBook(event, 'karamazov')">
+            <div class="book-title-vertical">까라마조프의 형제들</div>
+        </div>
+        <div class="book-spine" style="background-color: #1b5e20;" onclick="openBook(event, 'manPlantingTrees')">
+            <div class="book-title-vertical">나무를 심는 사람</div>
+        </div>
     </div>
 </div>
+
+<div class="detail-page" id="detailPage">
+    <div class="detail-header">
+        <button class="back-btn" onclick="closeBook(event)">◀</button>
+        <h2 id="pageTitle">책 제목</h2>
+    </div>
+    
+    <div class="sub-tabs">
+        <button class="sub-tab-btn active" onclick="switchTab(event, 0)">1. 저자&배경</button>
+        <button class="sub-tab-btn" onclick="switchTab(event, 1)">2. 내용 요약</button>
+        <button class="sub-tab-btn" onclick="switchTab(event, 2)">3. 캐릭터 연구</button>
+        <button class="sub-tab-btn" onclick="switchTab(event, 3)">4. 심층 해설</button>
+        <button class="sub-tab-btn" onclick="switchTab(event, 4)">5. 토론 질문</button>
+    </div>
+
+    <div class="detail-content" id="textContent">
+    </div>
+</div>
+
+<script>
+    const bookData = {
+        secretGarden: {
+            title: "비밀의 화원",
+            pages: [
+                "<h3>1. 저자 및 시대적 배경</h3><p><strong>저자:</strong> 프랜시스 호지슨 버넷 (Frances Hodgson Burnett, 1849~1924)</p><p><strong>시대적 배경:</strong> 1911년 에드워드 시대 영국을 배경으로 합니다. 당시 영국은 급격한 산업혁명의 고도화로 매연과 기계 문명에 지쳐가던 시기였습니다. 이 시기 문학계에서는 도시의 피폐함에서 벗어나 대자연 속에서 치유를 찾고자 하는 '자연주의적 회귀 현상'이 강하게 대두되었고, 작품 속 요크셔 무어(황무지)는 이러한 순수한 자연의 복원력을 상징하는 핵심 무대로 기능합니다.</p>",
+                "<h3>2. 상세 내용 요약</h3><p>인도에서 부모의 무관심 속에 고집스럽고 삐뚤어지게 자란 고아 소녀 '메리 레녹스'는 영국의 황량한 미셀스웨이트 저택으로 보내집니다. 고독한 저택 안에서 메리는 오랫동안 닫혀 있던 '비밀의 화원'의 열쇠를 발견하게 됩니다. 메리는 하녀 마사의 동생이자 자연과 교감하는 소년 '디콘', 그리고 꼽추가 될 것이라는 두려움과 히스테리에 갇혀 침대에만 누워 지내던 사촌 동생 '콜린'과 힘을 합쳐 죽어가는 정원을 비밀리에 가꾸기 시작합니다. 정원에 풀이 돋고 꽃이 피어나듯, 아이들의 닫혔던 마음과 병약했던 신체에도 놀라운 생명력과 기적을 보여줍니다.</p>",
+                "<h3>3. 심층 캐릭터 연구</h3><ul><li><strong>메리 레녹스:</strong> 방임과 고독 속에서 방어기제로 똘똘 뭉친 인물이었으나, 정원을 가꾸며 주체적이고 이타적인 존재로 탈바꿈하는 입체적 성장 캐릭터입니다.</li><li><strong>콜린 크레이븐:</strong> 어른들의 부정적인 예언과 가스라이팅으로 인해 스스로를 시한부 환자로 규정했던 인물입니다. 화원이라는 공간을 통해 심신이 치유되며 내면의 지배적 공포를 극복합니다.</li><li><strong>디콘:</strong> 자연의 섭리를 날것 그대로 체득한 인물로, 메리와 콜린을 문명(방 안)에서 자연(정원)으로 인도하는 매개자이자 구원자적 역할을 수행합니다.</li></ul>",
+                "<h3>4. 작품 해설 (심층 분석)</h3><p>《비밀의 화원》은 단순한 아동 문학을 넘어선 <strong>'심리적 복원력의 텍스트'</strong>입니다. 작품 속 '닫힌 정원'은 메리와 콜린의 상처받고 봉인된 내면세계를 투영하는 거울입니다. 황무지의 거친 바람과 차가운 흙을 맨손으로 만지며 잡초를 뽑아내는 행위는, 인위적인 치료나 어른들의 훈육이 아닌 대자연의 본원적 에너지(작중 '마법'으로 표현됨)를 받아들이는 과정입니다. 버넷은 마음의 병이 곧 신체의 병으로 이어진다는 현대 심신의학적 관점을 20세기 초에 이미 간파하여, 긍정적인 사유와 연대가 어떻게 인간을 부활시키는지를 정원의 개화 과정을 통해 정밀하게 은유해 냈습니다.</p>",
+                "<h3>5. 독서모임 토론 질문</h3><ol><li>메리와 콜린의 신경질적 성격은 타고난 것일까요, 아니면 환경적 방임과 어른들의 부정적 시선이 만들어낸 결과물일까요?</li><li>작품 속 아이들이 어른들에게 정원을 비밀로 부친 구체적인 심리적 요인은 무엇일까요?</li><li>오늘날 현대인들이 잃어버린 '나만의 비밀의 화원(치유의 공간)'은 어디에서 찾을 수 있을지 나누어 봅시다.</li></ol>"
+            ]
+        },
+        annaKarenina: {
+            title: "안나 카레니나",
+            pages: [
+                "<h3>1. 저자 및 시대적 배경</h3><p><strong>저자:</strong> 레프 톨스토이 (Leo Tolstoy, 1828~1910)</p><p><strong>시대적 배경:</strong> 1870년대 러시아 제국기입니다. 당시는 농농 해방령(1861년) 이후 급격한 근대화와 서구식 자본주의 제도가 도입되면서 러시아 전통적 도덕관과 서구식 개인주의 가치관이 극심하게 충돌하던 대전환기였습니다. 귀족 사회의 겉치레와 위선, 그리고 새로운 시대의 가족 해체 위기가 소설 전반에 무겁게 깔려 있습니다.</p>",
+                "<h3>2. 상세 내용 요약</h3><p>러시아 상류사회 귀족의 부인으로 완벽한 삶을 살고 있는 듯했던 '안나 카레니나'는 매력적인 젊은 장교 '브론스키'와 거부할 수 없는 치명적인 사랑에 빠집니다. 위선적인 남편 카레닌과 사회적 비난을 뒤로하고 안나는 파격을 선택하지만, 귀족 사회의 가혹한 냉대와 브론스키의 변심에 대한 끊임없는 의심 속에서 정신적으로 파멸해 갑니다. 이와 대조적으로 시골에서 농경을 가꾸며 삶의 진리를 찾는 사색가 '레빈'은 평범한 여인 '키티'와 우여곡절 끝에 결혼하여 소박하고 종교적인 가정 공동체를 이루며 참된 구원에 도달합니다. 결국 안나는 기차역 플랫폼에서 스스로 몸을 던져 파국을 맞이합니다.</p>",
+                "<h3>3. 심층 캐릭터 연구</h3><ul><li><strong>안나 카레니나:</strong> 사회적 도덕 굴레를 깨부순 비극적 인물로, 완전한 사랑만을 갈구하다 스스로 구축한 질투와 불안의 감옥에 갇혀 파멸하는 다면적 인간상의 전형입니다.</li><li><strong>레빈:</strong> 톨스토이 자신의 페르소나로, 문명의 위선을 혐오하고 노동과 대지 위에서 삶의 종교적 고결함을 갈구하는 구도자적 성격을 띱니다.</li><li><strong>카레닌:</strong> 체면과 관습, 형식적 법률만을 절대적 가치로 믿는 인물로, 감정이 메마른 근대 관료 사회의 화신입니다.</li></ul>",
+                "<h3>4. 작품 해설 (심층 분석)</h3><p>《안나 카레니나》는 <strong>인간 삶의 모든 양태를 담아낸 거대한 서사적 우주</strong>입니다. 톨스토이는 안나의 비극적 파멸과 레빈의 내면적 구원이라는 극단적인 평행선을 플롯으로 배치하여 '인간은 어떻게 살아야 하는가'라는 근원적 질문을 던집니다. 안나의 사랑은 사회적 위선에 맞선 숭고한 열정으로 출발했으나, 타인의 시선에 종속된 집착으로 변질되면서 파괴적인 탐닉으로 끝이 납니다. 반면 레빈은 끊임없이 고뇌하고 노동하며 삶의 불완전함을 있는 그대로 수용합니다. 소설의 첫 문장인 \"행복한 가정은 모두 서로 닮았고, 불행한 가정은 제각각의 이유로 불행하다\"는 말은, 규범의 붕괴 속에서 인간이 마주하는 실존적 불안을 완벽하게 포착한 철학적 선언입니다.</p>",
+                "<h3>5. 독서모임 토론 질문</h3><ol><li>안나의 비극적 결말은 그녀 개인의 집착 때문일까요, 아니면 상류 사회의 위선적인 잣대가 가한 사회적 타살일까요?</li><li>카레닌이 보여주는 '법과 체면 중심의 도덕'과 안나가 추구한 '감정 중심의 솔직함' 중 진정한 위선은 어디에 있다고 보십니까?</li><li>레빈이 농부들과 함께 땀 흘려 일하며 깨달은 '삶의 의미'는 현대 도시인들에게 어떤 시사점을 주는지 토론해 봅시다.</li></ol>"
+            ]
+        },
+        insupportableLight: {
+            title: "참을 수 없는 존재의 가벼움",
+            pages: [
+                "<h3>1. 저자 및 시대적 배경</h3><p><strong>저자:</strong> 밀란 쿤데라 (Milan Kundera, 1929~2023)</p><p><strong>시대적 배경:</strong> 1968년 체코슬로바키아의 민주화 운동인 '프라하의 봄'과 이를 무력으로 진압한 이른바 소련군의 탱크 점령 시기를 배경으로 합니다. 공산주의 독재 체제 아래에서 지식인들이 겪어야 했던 사상적 억압과 망명, 그리고 이데올로기의 허무함이 개인의 실존적 고뇌와 맞물려 흐릅니다.</p>",
+                "<h3>2. 상세 내용 요약</h3><p>외과의사 '토마시'는 끊임없이 수많은 여성들과 육체적 관계(성적 방탕)를 맺으며 어떤 구속도 거부하는 '가벼운' 삶을 사는 인물입니다. 반면 고향의 아픔과 무거운 사랑을 짊어진 여인 '테레자'는 토마시에게 '무거운' 운명으로 다가와 결혼에 이릅니다. 토마시의 오랜 연인이자 자유로운 예술가인 '사비나'는 영원한 가벼움을 좇아 서구로 망명하고, 그녀를 사랑하게 된 대학교수 '프란츠'는 혁명이라는 무거운 환상을 좇다 허망하게 죽음을 맞이합니다. 프라하의 봄 좌절 이후 토마시와 테레자는 시골 마을로 내려가 소박하게 정착하며 서로의 존재적 무게를 조율해 나가다 불의의 교통사고로 생을 마감합니다.</p>",
+                "<h3>3. 심층 캐릭터 연구</h3><ul><li><strong>토마시:</strong> 니체의 영원회귀를 부정하며 인생은 단 한 번뿐이기에 극도로 가벼워야 한다고 믿지만, 결국 테레자라는 운명의 무게를 외면하지 못하는 인물입니다.</li><li><strong>테레자:</strong> 신체와 영혼의 일치를 믿으며, 삶의 역사의 무거움과 질투의 고통을 온몸으로 견뎌내는 인물입니다.</li><li><strong>사비나:</strong> 모든 기성 권위와 키치(Kitsch, 위선적 환상)에 반역하며 극단의 가벼움을 추구하나, 끝내 전적인 고독에 직면합니다.</li></ul>",
+                "<h3>4. 작품 해설 (심층 분석)</h3><p>이 소설은 니체의 '영원회귀 사상'에 반기를 들며 출발하는 <strong>실존주의 철학 소설의 정점</strong>입니다. 한 번 사라지면 다시는 돌아오지 않는 인생에서, 과연 '무엇이 무겁고 무엇이 가벼운가?'라는 모순을 인물들의 사랑 방식을 통해 해체합니다. 쿤데라는 이데올로기나 거창한 도덕적 선동을 '키치(위선적 가짜 예술)'라고 명명하며 격렬히 비판합니다. 정형화된 이념의 무게에서 벗어난 인간은 자유롭지만(가벼움), 동시에 아무런 발 디딜 곳이 없는 공허함(참을 수 없음)을 느낍니다. 결국 토마시와 테레자가 마지막에 시골에서 발견한 행복은 무거움과 가벼움의 이분법적 대립이 아니라, 단 한 번뿐인 서로의 존재를 온전히 책임지는 성숙한 연민의 상태였음을 보여줍니다.</p>",
+                "<h3>5. 독서모임 토론 질문</h3><ol><li>당신의 삶이나 가치관은 토마시의 '가벼움(자유/일회성)'과 테레자의 '무거움(책임/운명)' 중 어느 쪽에 더 가깝습니까?</li><li>작가 밀란 쿤데라가 그토록 혐오했던 정치적·문화적 '키치(위선)'는 오늘날 소셜 미디어나 현대 사회에서 어떻게 나타나고 있을까요?</li><li>토마시가 모든 명예와 의사 직업을 잃고 시골 운전사로 내려갔을 때 비로소 느꼈던 '슬픈 행복'의 본질은 무엇일까요?</li></ol>"
+            ]
+        },
+        karamazov: {
+            title: "까라마조프의 형제들",
+            pages: [
+                "<h3>1. 저자 및 시대적 배경</h3><p><strong>저자:</strong> 표도르 도스토옙스키 (Fyodor Dostoevsky, 1821~1881)</p><p><strong>시대적 배경:</strong> 1870년대 후반 역동적이고 혼란스러웠던 제정 러시아 말기입니다. 서구에서 유입된 무신론, 허무주의, 합리주의적 과학 사상이 청년 지식인층을 지배하기 시작하면서, 러시아 고유의 정교회적 신앙과 영적 가치관이 뿌리째 흔들리던 도덕적 진공 상태의 시기였습니다.</p>",
+                "<h3>2. 상세 내용 요약</h3><p>탐욕스럽고 호색한인 아버지 '표도르 까라마조프'와 그의 세 아들(그리고 사생아 하나) 사이의 갈등을 다룹니다. 격정적이고 방탕하지만 순수한 장남 '드미트리'는 돈과 여자를 두고 아버지와 격렬히 대립합니다. 무신론자이자 이성주의자인 차남 '이반'은 신이 만든 세상의 부조리를 거부하며 \"신이 없다면 모든 것이 허용된다\"는 논리를 펼칩니다. 수도사인 삼남 '알료샤'는 끝없는 사랑으로 형제들을 중재하려 노력합니다. 그러던 중 아버지가 의문의 살해를 당하고, 정황상 장남 드미트리가 범인으로 몰려 재판을 받게 됩니다. 하지만 실제 범인은 이반의 사상에 심취해 논리를 실행에 옮긴 사생아 하인 '스메르댜코프'였습니다. 이 비극을 통해 형제들은 저마다의 방식으로 죄와 구원의 의무를 짊어집니다.</p>",
+                "<h3>3. 심층 캐릭터 연구</h3><ul><li><strong>이반 까라마조프:</strong> 극단적 인류애를 가졌으나 신의 구원 방식을 용납하지 못하는 지성인으로, 결국 자신의 사상이 살인을 낳았다는 죄책감에 미쳐버리는 비극적 지식인입니다.</li><li><strong>드미트리 까라마조프:</strong> 대지처럼 거칠고 충동적인 인간 본연의 육체성을 상징하지만, 고난을 통한 영적 정화를 온몸으로 수용하는 인물입니다.</li><li><strong>스메르댜코프:</strong> 이반의 냉소적 허무주의를 악용하여 아버지를 살해하는 비열하고 굴절된 자아의 표상입니다.</li></ul>",
+                "<h3>4. 작품 해설 (심층 분석)</h3><p>《까라마조프의 형제들》은 인간 내면에 공존하는 <strong>천사와 악마의 극단적인 심연을 해부한 철학적 대서사시</strong>입니다. 도스토옙스키는 친부 살해라는 자극적인 추리 소설의 외피를 빌려, 인류 사상사에서 가장 무거운 주제인 '신의 존재와 인간의 자유의지'를 탐구합니다. 작중 이반이 읊는 대서사시 〈대심문관〉 장은 기독교 역사상 가장 강력한 무신론적 기소장으로 꼽힙니다. 도스토옙스키는 이반의 논리적 무신론을 이론으로 반박하지 않습니다. 대신 알료샤의 무조건적인 포용과 조시마 장로의 '모든 사람은 모든 사람의 죄에 대해 책임이 있다'는 상호 연대적 책임론을 통해 구원의 답을 제시합니다. 까라마조프적인 '비열하고 질긴 생명력'이 어떻게 영적인 갱생으로 나아갈 수 있는지를 증명한 인류 문학의 위대한 유산입니다.</p>",
+                "<h3>5. 독서모임 토론 질문</h3><ol><li>이반의 주장처럼 \"신이 없다면 모든 범죄와 부도덕이 허용된다\"는 명제에 대해 어떻게 생각하십니까?</li><li>작품 속에서 아버지를 죽인 진짜 범인은 직접 칼을 든 스메르댜코프일까요, 사상을 제공한 이반일까요, 아니면 증오심을 품었던 드미트리일까요?</li><li>조시마 장로의 \"우리 모두는 타인의 죄에 대해 연대 책임이 있다\"는 가르침은 현대의 개인주의 사회에서 어떻게 해석될 수 있을까요?</li></ol>"
+            ]
+        },
+        manPlantingTrees: {
+            title: "나무를 심는 사람",
+            pages: [
+                "<h3>1. 저자 및 시대적 배경</h3><p><strong>저자:</strong> 장 지오노 (Jean Giono, 1895~1970)</p><p><strong>시대적 배경:</strong> 제1차 세계대전과 제2차 세계대전이라는 인류 역사상 가장 잔혹한 파괴와 학살이 자행되던 20세기 전반기 유럽을 배경으로 합니다. 문명의 이기가 전쟁의 무기로 변해 인간과 대지를 초토화하던 암흑의 시기였습니다.</p>",
+                "<h3>2. 상세 내용 요약</h3><p>젊은 여행가인 화자는 프랑스 프로방스 지방의 황량하고 메마른 알프스 끝자락 황무지를 걷다가, 홀로 묵묵히 양을 치며 살고 있는 노인 '엘제아르 부피에'를 만납니다. 노인은 아무런 보상도, 알아주는 이도 없지만 매일 건강한 도토리 100알을 골라 정성껏 거친 땅에 심어나고 있었습니다. 이후 두 차례의 세계대전이 발발하여 전 유럽이 피로 물드는 동안에도 노인은 요동치지 않고 떡갈나무, 너도밤나무, 자작나무를 끊임없이 심었습니다. 수십 년이 흐른 후, 물이 마르고 바람만 사납게 불던 불모지는 거대한 숲으로 변모합니다. 숲이 우거지자 마른 시냇가에 다시 물이 흐르고 동물이 돌아왔으며, 만 명이 넘는 사람들이 들어와 행복하게 살아가는 기적이 일어납니다.</p>",
+                "<h3>3. 심층 캐릭터 연구</h3><ul><li><strong>엘제아르 부피에:</strong> 아내와 자식을 잃은 슬픔을 파괴가 아닌 창조적 노동으로 승화시킨 성자적 인물로, 신의 영역인 창조를 인간의 끈기로 실현해 낸 고결한 영혼입니다.</li><li><strong>화자(나):</strong> 전쟁의 참상을 목격하며 인간에게 환멸을 느끼던 인물이었으나, 부피에의 숲을 지속적으로 방문하며 인간의 위대함และ 희망을 복원받는 관찰자입니다.</li></ul>",
+                "<h3>4. 작품 해설 (심층 분석)</h3><p>《나무를 심는 사람》은 <strong>고독한 한 인간의 이타적 신념이 어떻게 세상을 구원하는가</strong>를 보여주는 위대한 복음서입니다. 장 지오노는 수백만 명을 학살한 전쟁의 군주들과, 아무도 모르게 수억 그루의 나무를 살려낸 한 노인을 극적으로 대비시킵니다. 정치 권력과 제도적 혁명이 세상을 바꾸는 데 실패할 때, 묵묵하고 지속적인 개인의 노동은 대자연과 인류의 삶을 통째로 재창조해 낼 수 있음을 보여줍니다. 노인이 심은 것은 단순한 도토리가 아니라 문명의 파괴성에 대한 '생명 평화주의적 저항'이자 인간성에 대한 깊은 신뢰였습니다. 이 텍스트는 현대 환경주의 운동의 영적 모태가 되었으며, 최소한의 선한 의지가 축적될 때 일어나는 거대한 기적을 가장 아름다운 서정적 필치로 증명하고 있습니다.</p>",
+                "<h3>5. 독서모임 토론 질문</h3><ol><li>두 차례의 세계대전이라는 거대한 파괴 속에서도 노인이 흔들림 없이 나무를 심을 수 있었던 내면의 힘은 어디서 나왔을까요?</li><li>보상이나 타인의 인정이 전혀 없는 상황에서 오직 '미래 세대와 대지'만을 위해 일하는 삶이 현대 사회에서 가능할지 토론해 봅시다.</li><li>현재 나의 삶에서 메마른 황무지처럼 방치되어 있는 영역은 무엇이며, 그곳에 심어야 할 나만의 '도토리(작은 실천)'는 무엇인지 나누어 봅시다.</li></ol>"
+            ]
+        }
+    };
+
+    let currentBookKey = '';
+
+    function openBook(event, key) {
+        if(event) {
+            event.preventDefault();
+            event.stopPropagation();
+        }
+        currentBookKey = key;
+        const book = bookData[key];
+        document.getElementById('pageTitle').innerText = book.title;
+        document.getElementById('detailPage').classList.add('active');
+        switchTab(event, 0);
+    }
+
+    function closeBook(event) {
+        if(event) {
+            event.preventDefault();
+            event.stopPropagation();
+        }
+        document.getElementById('detailPage').classList.remove('active');
+    }
+
+    function switchTab(event, index) {
+        if(event) {
+            event.preventDefault();
+            event.stopPropagation();
+        }
+        const tabs = document.querySelectorAll('.sub-tab-btn');
+        tabs.forEach((tab, idx) => {
+            if(idx === index) tab.classList.add('active');
+            else tab.classList.remove('active');
+        });
+
+        const contentBox = document.getElementById('textContent');
+        contentBox.innerHTML = bookData[currentBookKey].pages[index];
+        contentBox.scrollTop = 0;
+    }
+</script>
 
 </body>
 </html>
